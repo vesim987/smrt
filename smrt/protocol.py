@@ -109,14 +109,14 @@ def get_id(name):
 def hex_readable(bts):
     return ':'.join(['{:02X}'.format(byte) for byte in bts])
 
+
 def payload_str(payload):
     ret = ''
     if type(payload) == bytes:
         items = interpret_payload(payload)
     else:
         items = payload
-    for item_id in items.keys():
-        value = items[item_id]
+    for item_id, value in items:
         try:
             value = interpret_value(value, receive_ids[item_id][1])
         except:
@@ -130,6 +130,7 @@ def payload_str(payload):
         fmt = '{name}: {value}  (id: {id}, kind: {kind})\n'
         ret += fmt.format(name=name, value=value, id=item_id, kind=kind)
     return ret
+
 
 def decode(data):
     data = list(data)
@@ -175,12 +176,12 @@ def interpret_header(header):
     return dict(zip(names, vals))
 
 def interpret_payload(payload):
-    results = OrderedDict()
+    results = []
     while len(payload) > len(PACKET_END):
         dtype, dlen = struct.unpack('!hh', payload[0:4])
         data = payload[4:4+dlen]
         payload = payload[4+dlen:]
-        results[dtype] = data
+        results.append((dtype, data))
     return results
 
 def assemble_packet(header, payload):
@@ -211,8 +212,9 @@ def interpret_value(value, kind):
     return value
 
 def get_payload_item_context(items, name_key):
-    hits = [key for key in items.keys() if receive_ids[key][2] == name_key]
+    hits = [key for key, val in items if receive_ids[key][2] == name_key]
     assert len(hits) == 1
+    items = dict(items)
     item_id = hits[0]
 
     kind = receive_ids[item_id][1]

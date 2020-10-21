@@ -37,16 +37,18 @@ def main():
 
     if args.action == 'query_port_mirror':
         header, payload = sc.query(GET, query_port_mirror_payload())
-        print(payload[16640])
+        print(payload)
     elif args.action == 'status':
         header, payload = sc.query(GET, query_port_8021q_vlan_status())
-        data = payload[8705]
-        print(repr(data))
-        id_, ports, unknown = struct.unpack("HII", data[1:13])
-        name = data[13:]
-        print(name)
-        for i in range(8):
-            print(i, ": ", (ports >> i& 1))
+        for id, data in payload:
+            if id != 8705:
+                continue
+            # print(repr(data))
+            id_, untagged, tagged = struct.unpack("!HII", data[0:10])
+            name = data[10:].rstrip(b'\0').decode()
+            print(name)
+            for i in range(8):
+                print(f"{i} : {'tagged' if (tagged >> i & 1) else 'untagged' if (untagged >> i & 1) else 'disabled'} ")
 
 if __name__ == "__main__":
     main()

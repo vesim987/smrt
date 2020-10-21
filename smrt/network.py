@@ -66,23 +66,22 @@ class SwitchConversation(object):
     def receive(self):
         try:
             fragment_offset = 1
-            total_payload = OrderedDict()
+            total_payload = []
             while fragment_offset:
                 data, addr = self.rs.recvfrom(1500)
                 data = decode(data)
                 header, payload = split(data)
                 header, payload = interpret_header(header), interpret_payload(payload)
-                print(repr(header), " ", repr(payload))
+                # print(f"{header = !r}\n{total_payload = !r}")
                 fragment_offset = header['fragment_offset']
                 logger.debug('Received Header:  ' + str(header))
                 logger.debug('Received Payload: ' + str(payload))
                 self.header['token_id'] = header['token_id']
-                total_payload.update(**payload)
-            return header, payload
+                total_payload += payload
+            return header, total_payload
         except:
-                print("no response")
-                raise ConnectionProblem()
-                return {}, {}
+            print("no response")
+            raise ConnectionProblem()
 
     def query(self, op_code, payload):
         self.send(op_code, payload)
