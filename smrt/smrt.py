@@ -38,8 +38,15 @@ def main():
     if args.action == 'query_port_mirror':
         header, payload = sc.query(GET, query_port_mirror_payload())
         print(payload[16640])
-    #elif args.action == 'status':
-    #    header, payload = sc.query(GET, query_port_mirror_payload())
+    elif args.action == 'status':
+        header, payload = sc.query(GET, query_port_8021q_vlan_status())
+        data = payload[8705]
+        print(repr(data))
+        id_, ports, unknown = struct.unpack("HII", data[1:13])
+        name = data[13:]
+        print(name)
+        for i in range(8):
+            print(i, ": ", (ports >> i& 1))
 
 if __name__ == "__main__":
     main()

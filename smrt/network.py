@@ -66,17 +66,18 @@ class SwitchConversation(object):
     def receive(self):
         try:
             fragment_offset = 1
-            total_payload = b''
+            total_payload = OrderedDict()
             while fragment_offset:
                 data, addr = self.rs.recvfrom(1500)
                 data = decode(data)
                 header, payload = split(data)
                 header, payload = interpret_header(header), interpret_payload(payload)
+                print(repr(header), " ", repr(payload))
                 fragment_offset = header['fragment_offset']
                 logger.debug('Received Header:  ' + str(header))
                 logger.debug('Received Payload: ' + str(payload))
                 self.header['token_id'] = header['token_id']
-                total_payload += payload
+                total_payload.update(**payload)
             return header, payload
         except:
                 print("no response")
